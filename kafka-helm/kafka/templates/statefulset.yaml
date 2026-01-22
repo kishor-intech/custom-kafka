@@ -191,6 +191,9 @@ spec:
               mountPath: {{ .Values.kafka.storage.mountPath }}
       
       terminationGracePeriodSeconds: 60
+      
+      nodeSelector:
+        kubernetes.io/hostname: srvk8sworker1
 
       {{ if .Values.kafka.storage.ephemeral }}
       volumes:

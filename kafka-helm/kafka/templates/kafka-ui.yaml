@@ -95,6 +95,9 @@ spec:
             limits:
               cpu: {{ .Values.kafkaUI.resources.limits.cpu | quote }}
               memory: {{ .Values.kafkaUI.resources.limits.memory | quote }}
+      
+      nodeSelector:
+        kubernetes.io/hostname: srvk8sworker1
 
 ---
 {{/*
