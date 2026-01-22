@@ -16,11 +16,11 @@ data:
   
   # Listeners
   KAFKA_CFG_LISTENERS: "INTERNAL://0.0.0.0:{{ .Values.kafka.listeners.internal.port }},EXTERNAL://0.0.0.0:{{ .Values.kafka.listeners.client.port }},CONTROLLER://0.0.0.0:{{ .Values.kafka.listeners.controller.port }}"
-  KAFKA_CFG_ADVERTISED_LISTENERS: "INTERNAL://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }},EXTERNAL://{{ .Values.kafka.externalBootstrapHost }}:{{ .Values.kafka.externalBootstrapPort }},CONTROLLER://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }}"
   KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
   
   KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
   KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@{{ include "kafka.fullname" . }}-0.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }}"
   
   # Replication
   KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: {{ .Values.kafka.replication.offsetsTopicReplicationFactor | quote }}
