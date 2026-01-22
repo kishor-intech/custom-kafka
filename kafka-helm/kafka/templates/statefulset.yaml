@@ -113,7 +113,7 @@ spec:
             - name: EXTERNAL_IP
               value: "{{ .Values.kafka.externalBootstrapHost }}"
             - name: EXTERNAL_PORT
-              value: "{{ .Values.kafka.externalBootstrapPort | quote }}"
+              value: "{{ .Values.kafka.externalBootstrapPort }}"
             - name: KAFKA_CFG_ADVERTISED_LISTENERS
               value: "INTERNAL://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }},EXTERNAL://$(EXTERNAL_IP):$(EXTERNAL_PORT),CONTROLLER://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }}"
             - name: HEADLESS_SVC
