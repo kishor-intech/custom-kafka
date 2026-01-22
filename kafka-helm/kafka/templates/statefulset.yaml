@@ -46,6 +46,7 @@ spec:
           volumeMounts:
             - name: kafka-data
               mountPath: {{ .Values.kafka.storage.mountPath }}
+              subPath: kafka-db
       {{ end }}
       
       {{/* Containers */}}
@@ -189,6 +190,7 @@ spec:
           volumeMounts:
             - name: kafka-data
               mountPath: {{ .Values.kafka.storage.mountPath }}
+              subPath: kafka-db
       
       terminationGracePeriodSeconds: 60
       

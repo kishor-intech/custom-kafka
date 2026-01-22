@@ -90,7 +90,7 @@ kafka:
     enabled: true
     size: "20Gi"                        # Storage size per broker
     className: "longhorn"               # Change to your storage class
-    mountPath: "/bitnami/kafka/data"
+    mountPath: "/opt/kafka/data"
     ephemeral: false                      # If true, use emptyDir instead of PVC (useful for local testing)
     logs:
       retentionHours: 168               # 7 days retention
