@@ -111,9 +111,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: EXTERNAL_IP
-              value: "{{ .Values.kafka.externalBootstrapHost }}"
+              value: "10.227.252.53"
             - name: EXTERNAL_PORT
-              value: "{{ .Values.kafka.externalBootstrapPort }}"
+              value: "9092"
             - name: KAFKA_CFG_ADVERTISED_LISTENERS
               value: "INTERNAL://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }},EXTERNAL://$(EXTERNAL_IP):$(EXTERNAL_PORT),CONTROLLER://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }}"
             - name: HEADLESS_SVC
