@@ -1,0 +1,51 @@
+{{- /*
+Kafka ConfigMap
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kafka.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: kafka
+    release: {{ .Release.Name }}
+data:
+  # KRaft Settings (static values)
+  KAFKA_CFG_PROCESS_ROLES: {{ .Values.kafka.processRoles | quote }}
+  KAFKA_CFG_CLUSTER_ID: {{ .Values.kafka.clusterId | quote }}
+  
+  # Listeners
+  KAFKA_CFG_LISTENERS: "PLAINTEXT://0.0.0.0:{{ .Values.kafka.listeners.client.port }},CONTROLLER://0.0.0.0:{{ .Values.kafka.listeners.controller.port }},INTERNAL://0.0.0.0:{{ .Values.kafka.listeners.internal.port }}"
+  KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.client.port }},CONTROLLER://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }},INTERNAL://$(POD_NAME).{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }}"
+  KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT"
+  
+  KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+  KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+  
+  # Replication
+  KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: {{ .Values.kafka.replication.offsetsTopicReplicationFactor | quote }}
+  KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: {{ .Values.kafka.replication.transactionLogReplicationFactor | quote }}
+  KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: {{ .Values.kafka.replication.transactionLogMinIsr | quote }}
+  KAFKA_CFG_MIN_INSYNC_REPLICAS: {{ .Values.kafka.replication.minInSyncReplicas | quote }}
+  KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: {{ .Values.kafka.replication.defaultReplicationFactor | quote }}
+  
+  # Storage
+  KAFKA_CFG_LOG_DIRS: {{ .Values.kafka.storage.mountPath }}
+  KAFKA_CFG_LOG_RETENTION_HOURS: {{ .Values.kafka.storage.logs.retentionHours | quote }}
+  {{- if .Values.kafka.storage.logs.retentionBytes }}
+  KAFKA_CFG_LOG_RETENTION_BYTES: {{ .Values.kafka.storage.logs.retentionBytes | quote }}
+  {{- end }}
+  KAFKA_CFG_LOG_SEGMENT_BYTES: {{ .Values.kafka.storage.logs.segmentBytes | quote }}
+  
+  # Performance
+  KAFKA_CFG_NUM_NETWORK_THREADS: {{ .Values.kafka.performance.networkThreads | quote }}
+  KAFKA_CFG_NUM_IO_THREADS: {{ .Values.kafka.performance.ioThreads | quote }}
+  KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES: {{ .Values.kafka.performance.socketSendBufferBytes | quote }}
+  KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES: {{ .Values.kafka.performance.socketReceiveBufferBytes | quote }}
+  KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES: {{ .Values.kafka.performance.socketRequestMaxBytes | quote }}
+  KAFKA_CFG_BATCH_SIZE: {{ .Values.kafka.performance.batchSize | quote }}
+  KAFKA_CFG_LINGER_MS: {{ .Values.kafka.performance.lingerMs | quote }}
+  
+  # Compression
+  KAFKA_CFG_COMPRESSION_TYPE: "snappy"
+  KAFKA_CFG_NUM_PARTITIONS: "3"
