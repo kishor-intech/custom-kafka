@@ -74,40 +74,29 @@ spec:
             - /bin/bash
             - -c
             - |
-              # Calculate Pod Index from Pod name (kfk-0 -> 0, kfk-1 -> 1, etc.)
+              # Calculate Pod Index from Pod name (k-0 -> 0, k-1 -> 1, etc.)
               export POD_ORDINAL=${HOSTNAME##*-}
               export NODE_ID=$((POD_ORDINAL + 1))
               
               # For KRaft, build voter list with only CURRENTLY RUNNING pods
               # Include self and any other pods that may already be running
-              VOTERS="${NODE_ID}@${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9093"
+              VOTERS="${NODE_ID}@${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }}"
               
               # Try to add other pods if they exist (for multi-broker setup scaling up)
               for i in $(seq 0 {{ sub (int .Values.kafka.replicas) 1 }}); do
                 if [ $i -ne $POD_ORDINAL ]; then
                   OTHER_POD="{{ include "kafka.fullname" . }}-${i}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local"
-                  if timeout 2 bash -c "echo > /dev/tcp/${OTHER_POD}/9093" 2>/dev/null; then
-                    VOTERS="${VOTERS},$(($i + 1))@${OTHER_POD}:9093"
+                  if timeout 2 bash -c "echo > /dev/tcp/${OTHER_POD}/{{ .Values.kafka.listeners.controller.port }}" 2>/dev/null; then
+                    VOTERS="${VOTERS},$(($i + 1))@${OTHER_POD}:{{ .Values.kafka.listeners.controller.port }}"
                   fi
                 fi
               done
               export CONTROLLER_QUORUM_VOTERS=$VOTERS
               
-              # Set advertised listeners
-              # If EXTERNAL_BOOTSTRAP_HOST is set, use it for client listener (external access)
-              # Otherwise use internal Kubernetes DNS
-              if [ -n "$EXTERNAL_BOOTSTRAP_HOST" ]; then
-                EXTERNAL_PORT="${EXTERNAL_BOOTSTRAP_PORT:-9092}"
-                export ADVERTISED_LISTENERS="PLAINTEXT://${EXTERNAL_BOOTSTRAP_HOST}:${EXTERNAL_PORT},CONTROLLER://${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9093,INTERNAL://${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9094"
-              else
-                export ADVERTISED_LISTENERS="PLAINTEXT://${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9092,CONTROLLER://${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9093,INTERNAL://${HOSTNAME}.{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:9094"
-              fi
-              
-              echo "===== Kafka Startup ====="
+              echo "===== Kafka KRaft Startup ====="
               echo "Pod: $HOSTNAME, Ordinal: $POD_ORDINAL, NodeID: $NODE_ID"
-              echo "External Bootstrap: ${EXTERNAL_BOOTSTRAP_HOST:-none (internal Kubernetes DNS)}"
               echo "Voters: $CONTROLLER_QUORUM_VOTERS"
-              echo "Advertised: $ADVERTISED_LISTENERS"
+              echo "Bootstrap Servers: INTERNAL://{{ include "kafka.fullname" . }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }}, EXTERNAL://{{ .Values.kafka.externalBootstrapHost }}:{{ .Values.kafka.externalBootstrapPort }}"
               
               # Now run the entrypoint
               exec /entrypoint.sh
@@ -127,16 +116,10 @@ spec:
               value: "{{ .Values.kafka.clusterId }}"
             - name: PROCESS_ROLES
               value: "{{ .Values.kafka.processRoles }}"
-            - name: LISTENERS
-              value: "PLAINTEXT://0.0.0.0:{{ .Values.kafka.listeners.client.port }},CONTROLLER://0.0.0.0:{{ .Values.kafka.listeners.controller.port }},INTERNAL://0.0.0.0:{{ .Values.kafka.listeners.internal.port }}"
-            - name: ADVERTISED_LISTENERS_TEMPLATE
-              value: "PLAINTEXT://%s.{{ .Release.Name }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.client.port }},CONTROLLER://%s.{{ .Release.Name }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.controller.port }},INTERNAL://%s.{{ .Release.Name }}-headless.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.listeners.internal.port }}"
             - name: CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: INTER_BROKER_LISTENER_NAME
               value: "INTERNAL"
-            - name: LISTENER_SECURITY_PROTOCOL_MAP
-              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT"
             - name: LOG_DIRS
               value: "{{ .Values.kafka.storage.mountPath }}"
             - name: LOG_RETENTION_HOURS

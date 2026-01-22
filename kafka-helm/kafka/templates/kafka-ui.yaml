@@ -11,7 +11,7 @@ metadata:
     app: kafka-ui
 data:
   KAFKA_CLUSTERS_0_NAME: "local-cluster"
-  KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:{{ .Values.kafka.listeners.client.port }}"
+  KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "{{ include "kafka.fullname" . }}-headless:{{ .Values.kafka.listeners.internal.port }}"
   KAFKA_UI_BROKERS_CLUSTERIDENTIFIER: "local-cluster"
   LOGGING_LEVEL_ROOT: "WARN"
 
